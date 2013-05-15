@@ -1,5 +1,6 @@
 require 'net/http'
 require 'net/https'
+require 'json'
 
 module MMonit
 	class Connection
@@ -38,6 +39,10 @@ module MMonit
 
 		def login
 			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}").code.to_i == 302
+		end
+
+		def status
+			JSON.parse(self.request('/json/status/list').body)['records']
 		end
 
 		def request(path, body="", headers = {})
