@@ -49,6 +49,10 @@ module MMonit
 			JSON.parse(self.request('/json/admin/hosts/list').body)['records']
 		end
 
+		def users
+			JSON.parse(self.request('/json/admin/users/list').body)['records']
+		end
+
 		def request(path, body="", headers = {})
 			self.connect unless @http.is_a?(Net::HTTP)
 			@http.post(path, body, @headers.merge(headers))
