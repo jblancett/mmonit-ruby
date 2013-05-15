@@ -61,6 +61,10 @@ module MMonit
 			JSON.parse(self.request('/json/events/list').body)['records']
 		end
 
+		def topography
+			JSON.parse(self.request('/json/status/topography').body)['records']['Data']
+		end
+
 		def reports(hostid=nil)
 			body = String.new
 			body = "hostid=#{hostid.to_s}" if hostid
