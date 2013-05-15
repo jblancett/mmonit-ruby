@@ -61,6 +61,12 @@ module MMonit
 			JSON.parse(self.request('/json/events/list').body)['records']
 		end
 
+		def reports(hostid=nil)
+			body = String.new
+			body = "hostid=#{hostid.to_s}" if hostid
+			JSON.parse(self.request('/json/reports/overview', body).body)
+		end
+
 		def request(path, body="", headers = {})
 			self.connect unless @http.is_a?(Net::HTTP)
 			@http.post(path, body, @headers.merge(headers))
