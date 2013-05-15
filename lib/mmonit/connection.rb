@@ -31,7 +31,7 @@ module MMonit
 				@http.use_ssl = true
 				@http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 			end
-			
+
 			@headers['Cookie'] = @http.get('/index.csp').response['set-cookie'].split(';').first
 			self.login
 		end
@@ -40,7 +40,8 @@ module MMonit
 			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}").code.to_i == 302
 		end
 
-		def request(path, body="", headers = {})	
+		def request(path, body="", headers = {})
+			self.connect unless @http.is_a?(Net::HTTP)
 			@http.post(path, body, @headers.merge(headers))
 		end
 	end
