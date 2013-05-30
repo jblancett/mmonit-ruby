@@ -71,6 +71,17 @@ module MMonit
 			JSON.parse(self.request('/json/reports/overview', body).body)
 		end
 
+		def get_host(fqdn)
+			host = self.hosts.select{ |h| h['host'] == fqdn }
+			host.empty? ? nil : host.first
+		end
+
+		def delete_host(host)
+			host = get_host(host['host']) if host.key?('host') && ! host.key?('id')
+			return false unless host['id']
+			self.request('/admin/hosts/', "id=#{host['id']}&Delete=1")
+		end
+
 		def request(path, body="", headers = {})
 			self.connect unless @http.is_a?(Net::HTTP)
 			@http.post(path, body, @headers.merge(headers))
