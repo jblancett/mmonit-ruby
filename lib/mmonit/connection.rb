@@ -77,7 +77,7 @@ module MMonit
 		end
 
 		def delete_host(host)
-			host = get_host(host['host']) if host.key?('host') && ! host.key?('id')
+			host = self.get_host(host['host']) if host.key?('host') && ! host.key?('id')
 			return false unless host['id']
 			self.request('/admin/hosts/', "id=#{host['id']}&Delete=1")
 		end
