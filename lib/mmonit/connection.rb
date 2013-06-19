@@ -50,36 +50,42 @@ module MMonit
 		end
 
 		def users
-			JSON.parse(self.request('/json/admin/users/list').body)['records']
+			JSON.parse(self.request('/json/admin/users/list').body)
 		end
 
-		def rules
-			JSON.parse(self.request('/json/admin/rules/list').body)['records']
+		def alerts
+			JSON.parse(self.request('/json/admin/alerts/list').body)
 		end
 
 		def events
 			JSON.parse(self.request('/json/events/list').body)['records']
 		end
 
-		def topography
-			JSON.parse(self.request('/json/status/topography').body)['records']['Data']
-		end
+		####  topography and reports are disabled until I figure out their new equivalent in M/Monit
+		# def topography
+		# 	JSON.parse(self.request('/json/status/topography').body)
+		# end
 
-		def reports(hostid=nil)
-			body = String.new
-			body = "hostid=#{hostid.to_s}" if hostid
-			JSON.parse(self.request('/json/reports/overview', body).body)
-		end
+		# def reports(hostid=nil)
+		# 	body = String.new
+		# 	body = "hostid=#{hostid.to_s}" if hostid
+		# 	JSON.parse(self.request('/json/reports/overview', body).body)
+		# end
 
-		def get_host(fqdn)
+		def find_host(fqdn)
 			host = self.hosts.select{ |h| h['host'] == fqdn }
 			host.empty? ? nil : host.first
 		end
 
+		# another option:  /admin/hosts/json/get?id=####
+		def get_host_details(id)
+			JSON.parse(self.request("/json/status/detail?hostid=#{id}").body)['records']['host'] rescue nil
+		end
+
 		def delete_host(host)
-			host = self.get_host(host['host']) if host.key?('host') && ! host.key?('id')
+			host = self.find_host(host['host']) if host.key?('host') && ! host.key?('id')
 			return false unless host['id']
-			self.request('/admin/hosts/', "id=#{host['id']}&Delete=1")
+			self.request("/admin/hosts/delete?id=#{host['id']}")
 		end
 
 		def request(path, body="", headers = {})
