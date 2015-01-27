@@ -21,7 +21,7 @@ module MMonit
 				'Referer' => "#{@url}/index.csp",
 				'Content-Type' => 'application/x-www-form-urlencoded',
 				'User-Agent' => @useragent,
-				'Connection' => 'keepalive'
+				'Connection' => 'Keep-Alive'
 			}
 		end
 
@@ -38,59 +38,71 @@ module MMonit
 		end
 
 		def login
-			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}").code.to_i == 302
+			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}", true).code.to_i == 302
 		end
 
+		# Status API: http://mmonit.com/documentation/http-api/Methods/Status
 		def status
-			JSON.parse(self.request('/json/status/list').body)['records']
+			JSON.parse(self.request('/status/hosts/list').body)['records']
 		end
 
-		def hosts
-			JSON.parse(self.request('/json/admin/hosts/list').body)['records']
+		def status_detailed(id_or_fqdn)
+			host = find_host(id_or_fqdn)
+			host.nil? ? nil : JSON.parse(self.request("/status/hosts/get?id=#{host['id']}").body)['records']['host'] rescue nil
 		end
 
-		def users
-			JSON.parse(self.request('/json/admin/users/list').body)
-		end
-
-		def alerts
-			JSON.parse(self.request('/json/admin/alerts/list').body)
-		end
-
+		# Events API: http://mmonit.com/documentation/http-api/Methods/Events
 		def events
-			JSON.parse(self.request('/json/events/list').body)['records']
+			JSON.parse(self.request('/reports/events/list').body)['records']
 		end
 
-		####  topography and reports are disabled until I figure out their new equivalent in M/Monit
-		# def topography
-		# 	JSON.parse(self.request('/json/status/topography').body)
-		# end
+		def event(id)
+			JSON.parse(self.request("/reports/events/get?id=#{id}").body) rescue nil
+		end
 
-		# def reports(hostid=nil)
-		# 	body = String.new
-		# 	body = "hostid=#{hostid.to_s}" if hostid
-		# 	JSON.parse(self.request('/json/reports/overview', body).body)
-		# end
+		# Admin Hosts API: http://mmonit.com/documentation/http-api/Methods/Admin_Hosts
+		def hosts
+			JSON.parse(self.request('/admin/hosts/list').body)['records']
+		end
 
-		def find_host(fqdn)
-			host = self.hosts.select{ |h| h['host'] == fqdn }
+		def host(id_or_fqdn)
+			host = find_host(id_or_fqdn)
+			host.nil? ? nil : JSON.parse(self.request("/admin/hosts/get?id=#{host['id']}").body) rescue nil
+		end
+
+		# Admin Users API: http://mmonit.com/documentation/http-api/Methods/Admin_Users
+		def users
+			JSON.parse(self.request('/admin/users/list').body)
+		end
+
+		def user(username)
+			JSON.parse(self.request("/admin/users/get?uname=#{username}").body) rescue nil
+		end
+
+		# Admin Groups API: http://mmonit.com/documentation/http-api/Methods/Admin_Groups
+		def groups
+			JSON.parse(self.request('/admin/groups/list').body)
+		end
+
+		# Helpers
+		def find_host(id_or_fqdn)
+			hosts = self.hosts rescue []
+			host = hosts.select{ |h| h['id'] == id_or_fqdn || h['host'] == id_or_fqdn }
 			host.empty? ? nil : host.first
 		end
 
-		# another option:  /admin/hosts/json/get?id=####
-		def get_host_details(id)
-			JSON.parse(self.request("/json/status/detail?hostid=#{id}").body)['records']['host'] rescue nil
-		end
-
-		def delete_host(host)
-			host = self.find_host(host['host']) if host.key?('host') && ! host.key?('id')
-			return false unless host['id']
-			self.request("/admin/hosts/delete?id=#{host['id']}")
-		end
-
-		def request(path, body="", headers = {})
+		def request(path, body="", is_post = false, headers = {})
 			self.connect unless @http.is_a?(Net::HTTP)
-			@http.post(path, body, @headers.merge(headers))
+			if is_post
+				@http.post(path, body, @headers.merge(headers))
+			else
+				@http.get(path, @headers.merge(headers))
+			end
+		end
+
+		# Backwards compatability
+		def get_host_details(id) # Left for backwards compatability
+			status_detailed(id)
 		end
 	end
 end
