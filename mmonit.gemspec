@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
 	gem.summary = 'Ruby interface to M/Monit'
 	gem.description = gem.summary
 	gem.name = 'mmonit'
-	gem.files = `git ls-files`.split("\n")
+	gem.files = Dir.glob("{bin,lib}/**/*") + %w(README.md)
 	gem.require_paths = ['lib']
 	gem.version = MMonit::VERSION
 end
