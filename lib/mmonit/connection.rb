@@ -4,7 +4,7 @@ require 'json'
 
 module MMonit
 	class Connection
-		attr_reader :http, :address, :port, :ssl, :username, :useragent, :headers
+		attr_reader :http, :address, :port, :ssl, :username, :useragent, :proxy_address, :proxy_port, :headers
 		attr_writer :password
 
 		def initialize(options = {})
@@ -16,6 +16,8 @@ module MMonit
 			@password = options[:password]
 			options[:useragent] ||= "MMonit-Ruby/#{MMonit::VERSION}"
 			@useragent = options[:useragent]
+			@proxy_address = options[:proxy_address]
+			@proxy_port = options[:proxy_port]
 			@headers = {
 				'Host' => @address,
 				'Referer' => "#{@url}/index.csp",
@@ -26,7 +28,7 @@ module MMonit
 		end
 
 		def connect
-			@http = Net::HTTP.new(@address, @port)
+			@http = Net::HTTP.new(@address, @port, @proxy_address, @proxy_port)
 
 			if @ssl
 				@http.use_ssl = true
