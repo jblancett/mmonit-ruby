@@ -87,7 +87,7 @@ module MMonit
 		# Helpers
 		def find_host(id_or_fqdn)
 			hosts = self.hosts rescue []
-			host = hosts.select{ |h| h['id'] == id_or_fqdn || h['host'] == id_or_fqdn }
+			host = hosts.select{ |h| h['id'] == id_or_fqdn || h['hostname'] == id_or_fqdn }
 			host.empty? ? nil : host.first
 		end
 
