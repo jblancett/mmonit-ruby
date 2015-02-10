@@ -47,8 +47,8 @@ module MMonit
 		end
 
 		def status_detailed(id_or_fqdn)
-			status = find_status(id_or_fqdn)
-			status.nil? ? nil : JSON.parse(self.request("/status/hosts/get?id=#{status['id']}").body)['records']['host'] rescue nil
+			id = find_status_id(id_or_fqdn)
+			id.nil? ? nil : JSON.parse(self.request("/status/hosts/get?id=#{id}").body)['records']['host'] rescue nil
 		end
 
 		# Events API: http://mmonit.com/documentation/http-api/Methods/Events
@@ -66,8 +66,8 @@ module MMonit
 		end
 
 		def host(id_or_fqdn)
-			host = find_host(id_or_fqdn)
-			host.nil? ? nil : JSON.parse(self.request("/admin/hosts/get?id=#{host['id']}").body) rescue nil
+			id = find_host_id(id_or_fqdn)
+			id.nil? ? nil : JSON.parse(self.request("/admin/hosts/get?id=#{id}").body) rescue nil
 		end
 
 		# Admin Users API: http://mmonit.com/documentation/http-api/Methods/Admin_Users
@@ -91,10 +91,24 @@ module MMonit
 			host.empty? ? nil : host.first
 		end
 
+		def find_host_id(id_or_fqdn)
+			return id_or_fqdn if id_or_fqdn.is_a?(Integer)
+
+			data = find_status(id_or_fqdn)
+			data.nil? ? nil : data['id']
+		end
+
 		def find_status(id_or_fqdn)
 			statuses = self.status rescue []
 			status = statuses.select{ |s| s['id'] == id_or_fqdn || s['hostname'] == id_or_fqdn }
 			status.empty? ? nil : status.first
+		end
+
+		def find_status_id(id_or_fqdn)
+			return id_or_fqdn if id_or_fqdn.is_a?(Integer)
+
+			data = find_status(id_or_fqdn)
+			data.nil? ? nil : data['id']
 		end
 
 		def request(path, body="", is_post = false, headers = {})
