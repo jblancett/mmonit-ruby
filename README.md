@@ -1,35 +1,48 @@
-mmonit-ruby
-===========
+# mmonit-ruby
 
 Ruby interface for M/Monit
 
-All the commands listed here are currently available:
+A subset of the [M/Monit HTTP API](http://mmonit.com/documentation/http-api/) commands are currently available. Requests are currently read-only.
 
-http://mmonit.com/wiki/MMonit/HTTP-API
+## Available Commands
 
-Requests are read-only until I find a way to do more.
+* `connect` - Connect to M/Monit and establish a session
+* `status` - Status overview
+* `status_detailed(id_or_fqdn)` - Detailed status for a specified host
+  * `id_or_fqdn` - Either the numeric id or the fully-qualified domain name for a host
+* `events` - Events overview
+* `event(id)` - Detailed information about an event
+  * `id` - The numeric id for an event
+* `hosts` - A list of hosts
+* `host(id_or_fqdn)` - Detailed information about a specified host
+  * `id_or_fqdn` - Either the numeric id or the fully-qualified domain name for a host
+* `users` - A list of users
+* `user(id)` - Detailed information about a user
+  * `id` - The numeric id for a user
+* `groups` - A list of groups
 
+## Usage
 
+    require 'mmonit-ruby'
 
+    mmonit = MMonit::Connection.new({
+            :ssl => true,
+            :username => 'USERNAME',
+            :password => 'PASSWORD',
+            :address => 'example.com',
+            :port => '443'
+    })
 
-mmonit = MMonit::Connection.new({
-        :ssl => true,
-        :username => 'USERNAME',
-        :password => 'PASSWORD',
-        :address => 'example.com',
-        :port => '443'
-})
+    mmonit.connect
 
-mmonit.connect
+    hosts = mmonit.hosts
 
-hosts = mmonit.hosts
-
-p hosts
-
-
+## Custom Requests
 
 Custom requests can be made like:
 
-mmonit.request(path, [body])
+    require 'mmonit-ruby'
 
-body is optional
+    mmonit.request(path, [body])
+
+`body` is optional
