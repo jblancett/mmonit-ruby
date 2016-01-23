@@ -40,6 +40,10 @@ module MMonit
 			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}&z_csrf_protection=off").code.to_i == 302
 		end
 
+		def logout
+			self.request('/login/logout.csp')
+		end
+		
 		def status
 			JSON.parse(self.request('/status/list').body)['records']
 		end
