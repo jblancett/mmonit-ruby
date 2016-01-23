@@ -97,9 +97,20 @@ module MMonit
 		end
 
 		def delete_group(group)
-			g = self.find_group(group) unless group.key?('id')
-			return false unless g['id']
-			self.request("/admin/groups/delete", "id=#{g['id']}")
+			group = self.find_group(group) unless group.key?('id')
+			return false unless group['id']
+			self.request("/admin/groups/delete", "id=#{group['id']}")
+		end
+
+		def create_group(group)
+			self.request("/admin/groups/create", "name=#{group}")
+		end
+
+		def add_group(group, host)
+			group = self.find_group(group) unless group.key?('id')
+			host = self.find_host(host) unless host.key('id')
+			return false unless group['id']
+			self.request("/admin/groups/add", "id=#{group['id']}&hostid=#{host['id']}")
 		end
 
 		def request(path, body="", headers = {})
