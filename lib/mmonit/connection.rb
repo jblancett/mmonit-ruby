@@ -80,7 +80,7 @@ module MMonit
 		# end
 
 		def find_host(fqdn)
-			host = self.hosts.select{ |h| h['host'] == fqdn }
+			host = self.hosts.select{ |h| h['hostname'] == fqdn }
 			host.empty? ? nil : host.first
 		end
 
@@ -89,9 +89,8 @@ module MMonit
 			groups.empty? ? nil : groups.first
 		end
 
-		# another option:  /admin/hosts/json/get?id=####
 		def get_host_details(id)
-			JSON.parse(self.request("/status/detail?hostid=#{id}").body)['records']['host'] rescue nil
+			JSON.parse(self.request("/status/hosts/get?id=#{id}").body)['records']['host'] rescue nil
 		end
 
 		def delete_host(host)
@@ -111,7 +110,6 @@ module MMonit
 		end
 
 		def add_group(group, host)
-			puts host
 			group = self.find_group(group) unless group.kind_of?(Hash) && group.key?('id')
 			host = self.find_host(host) unless host.kind_of?(Hash) && host.key('id')
 			return false unless group['id'] && host['id']
