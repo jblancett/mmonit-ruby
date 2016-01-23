@@ -18,7 +18,6 @@ module MMonit
 			@useragent = options[:useragent]
 			@headers = {
 				'Host' => @address,
-				'Referer' => "#{@url}/index.csp",
 				'Content-Type' => 'application/x-www-form-urlencoded',
 				'User-Agent' => @useragent,
 				'Connection' => 'keepalive'
@@ -33,32 +32,32 @@ module MMonit
 				@http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 			end
 
-			@headers['Cookie'] = @http.get('/index.csp').response['set-cookie'].split(';').first
+			@headers['Cookie'] = @http.get('/index.csp', initheader = @headers).response['set-cookie'].split(';').first
 			self.login
 		end
 
 		def login
-			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}").code.to_i == 302
+			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}&z_csrf_protection=off").code.to_i == 302
 		end
 
 		def status
-			JSON.parse(self.request('/json/status/list').body)['records']
+			JSON.parse(self.request('/status/list').body)['records']
 		end
 
 		def hosts
-			JSON.parse(self.request('/json/admin/hosts/list').body)['records']
+			JSON.parse(self.request('/admin/hosts/list').body)['records']
 		end
 
 		def users
-			JSON.parse(self.request('/json/admin/users/list').body)
+			JSON.parse(self.request('/admin/users/list').body)
 		end
 
 		def alerts
-			JSON.parse(self.request('/json/admin/alerts/list').body)
+			JSON.parse(self.request('/admin/alerts/list').body)
 		end
 
 		def events
-			JSON.parse(self.request('/json/events/list').body)['records']
+			JSON.parse(self.request('/events/list').body)['records']
 		end
 
 		####  topography and reports are disabled until I figure out their new equivalent in M/Monit
@@ -79,7 +78,7 @@ module MMonit
 
 		# another option:  /admin/hosts/json/get?id=####
 		def get_host_details(id)
-			JSON.parse(self.request("/json/status/detail?hostid=#{id}").body)['records']['host'] rescue nil
+			JSON.parse(self.request("/status/detail?hostid=#{id}").body)['records']['host'] rescue nil
 		end
 
 		def delete_host(host)
@@ -90,7 +89,11 @@ module MMonit
 
 		def request(path, body="", headers = {})
 			self.connect unless @http.is_a?(Net::HTTP)
-			@http.post(path, body, @headers.merge(headers))
+			if body == ""
+				@http.get(path, initheader = @headers.merge(headers))
+			else
+				@http.post(path, body, @headers.merge(headers))
+			end
 		end
 	end
 end
