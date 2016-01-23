@@ -32,4 +32,4 @@ Custom requests can be made like:
 
 ## TODO
 
-Requests are read-only until I find a way to do more.
+- Review events methods

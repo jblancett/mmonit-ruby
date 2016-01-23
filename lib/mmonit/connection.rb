@@ -43,7 +43,7 @@ module MMonit
 		def logout
 			self.request('/login/logout.csp')
 		end
-		
+
 		def status
 			JSON.parse(self.request('/status/list').body)['records']
 		end
@@ -53,7 +53,7 @@ module MMonit
 		end
 
 		def groups
-			JSON.parse(self.request('/admin/groups/list').body)
+			JSON.parse(self.request('/admin/groups/list').body)['groups']
 		end
 
 		def users
@@ -111,9 +111,10 @@ module MMonit
 		end
 
 		def add_group(group, host)
-			group = self.find_group(group) unless group.key?('id')
-			host = self.find_host(host) unless host.key('id')
-			return false unless group['id']
+			puts host
+			group = self.find_group(group) unless group.kind_of?(Hash) && group.key?('id')
+			host = self.find_host(host) unless host.kind_of?(Hash) && host.key('id')
+			return false unless group['id'] && host['id']
 			self.request("/admin/groups/add", "id=#{group['id']}&hostid=#{host['id']}")
 		end
 
