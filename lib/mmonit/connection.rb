@@ -80,6 +80,11 @@ module MMonit
 			host.empty? ? nil : host.first
 		end
 
+		def find_group(group)
+			groups = self.groups.select{ |g| g['name'] == group }
+			groups.empty? ? nil : groups.first
+		end
+
 		# another option:  /admin/hosts/json/get?id=####
 		def get_host_details(id)
 			JSON.parse(self.request("/status/detail?hostid=#{id}").body)['records']['host'] rescue nil
@@ -89,6 +94,12 @@ module MMonit
 			host = self.find_host(host['host']) if host.key?('host') && ! host.key?('id')
 			return false unless host['id']
 			self.request("/admin/hosts/delete?id=#{host['id']}")
+		end
+
+		def delete_group(group)
+			g = self.find_group(group) unless group.key?('id')
+			return false unless g['id']
+			self.request("/admin/groups/delete", "id=#{g['id']}")
 		end
 
 		def request(path, body="", headers = {})
