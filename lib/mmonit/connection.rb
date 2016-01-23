@@ -48,6 +48,10 @@ module MMonit
 			JSON.parse(self.request('/admin/hosts/list').body)['records']
 		end
 
+		def groups
+			JSON.parse(self.request('/admin/groups/list').body)
+		end
+
 		def users
 			JSON.parse(self.request('/admin/users/list').body)
 		end
