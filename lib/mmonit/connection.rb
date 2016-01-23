@@ -110,8 +110,8 @@ module MMonit
 		end
 
 		def add_group(group, host)
-			group = self.find_group(group) unless group.kind_of?(Hash) && group.key?('id')
-			host = self.find_host(host) unless host.kind_of?(Hash) && host.key('id')
+			group = self.find_group(group) if group.is_a?(String)
+			host = self.find_host(host) if host.is_a?(String)
 			return false unless group['id'] && host['id']
 			self.request("/admin/groups/add", "id=#{group['id']}&hostid=#{host['id']}")
 		end
