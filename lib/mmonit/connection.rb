@@ -109,11 +109,17 @@ module MMonit
 			self.request("/admin/groups/create", "name=#{group}")
 		end
 
-		def add_group(group, host)
+		def add_group(group, hostids)
 			group = self.find_group(group) if group.is_a?(String)
-			host = self.find_host(host) if host.is_a?(String)
-			return false unless group['id'] && host['id']
-			self.request("/admin/groups/add", "id=#{group['id']}&hostid=#{host['id']}")
+			return false unless group['id']
+			if hostids.is_a?(Array)
+				hostids_str = hostids.join('&hostid=')
+			elsif hostids.is_a?(String)
+				hostids_str = hostids
+			elsif hostid.key('id')
+				hostids_str = hostids['id']
+			end
+			self.request("/admin/groups/add", "id=#{group['id']}&hostid=#{hostids_str}")
 		end
 
 		def request(path, body="", headers = {})
