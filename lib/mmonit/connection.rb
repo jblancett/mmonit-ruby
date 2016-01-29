@@ -18,7 +18,6 @@ module MMonit
 			@useragent = options[:useragent]
 			@headers = {
 				'Host' => @address,
-				'Referer' => "#{@url}/index.csp",
 				'Content-Type' => 'application/x-www-form-urlencoded',
 				'User-Agent' => @useragent,
 				'Connection' => 'keepalive'
@@ -33,32 +32,40 @@ module MMonit
 				@http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 			end
 
-			@headers['Cookie'] = @http.get('/index.csp').response['set-cookie'].split(';').first
+			@headers['Cookie'] = @http.get('/index.csp', initheader = @headers).response['set-cookie'].split(';').first
 			self.login
 		end
 
 		def login
-			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}").code.to_i == 302
+			self.request('/z_security_check', "z_username=#{@username}&z_password=#{@password}&z_csrf_protection=off").code.to_i == 302
+		end
+
+		def logout
+			self.request('/login/logout.csp')
 		end
 
 		def status
-			JSON.parse(self.request('/json/status/list').body)['records']
+			JSON.parse(self.request('/status/list').body)['records']
 		end
 
 		def hosts
-			JSON.parse(self.request('/json/admin/hosts/list').body)['records']
+			JSON.parse(self.request('/admin/hosts/list').body)['records']
+		end
+
+		def groups
+			JSON.parse(self.request('/admin/groups/list').body)['groups']
 		end
 
 		def users
-			JSON.parse(self.request('/json/admin/users/list').body)
+			JSON.parse(self.request('/admin/users/list').body)
 		end
 
 		def alerts
-			JSON.parse(self.request('/json/admin/alerts/list').body)
+			JSON.parse(self.request('/admin/alerts/list').body)
 		end
 
 		def events
-			JSON.parse(self.request('/json/events/list').body)['records']
+			JSON.parse(self.request('/events/list').body)['records']
 		end
 
 		####  topography and reports are disabled until I figure out their new equivalent in M/Monit
@@ -73,13 +80,17 @@ module MMonit
 		# end
 
 		def find_host(fqdn)
-			host = self.hosts.select{ |h| h['host'] == fqdn }
+			host = self.hosts.select{ |h| h['hostname'] == fqdn }
 			host.empty? ? nil : host.first
 		end
 
-		# another option:  /admin/hosts/json/get?id=####
+		def find_group(group)
+			groups = self.groups.select{ |g| g['name'] == group }
+			groups.empty? ? nil : groups.first
+		end
+
 		def get_host_details(id)
-			JSON.parse(self.request("/json/status/detail?hostid=#{id}").body)['records']['host'] rescue nil
+			JSON.parse(self.request("/status/hosts/get?id=#{id}").body)['records']['host'] rescue nil
 		end
 
 		def delete_host(host)
@@ -88,9 +99,36 @@ module MMonit
 			self.request("/admin/hosts/delete?id=#{host['id']}")
 		end
 
+		def delete_group(group)
+			group = self.find_group(group) unless group.key?('id')
+			return false unless group['id']
+			self.request("/admin/groups/delete", "id=#{group['id']}")
+		end
+
+		def create_group(group)
+			self.request("/admin/groups/create", "name=#{group}")
+		end
+
+		def add_group(group, hostids)
+			group = self.find_group(group) if group.is_a?(String)
+			return false unless group['id']
+			if hostids.is_a?(Array)
+				hostids_str = hostids.join('&hostid=')
+			elsif hostids.is_a?(String)
+				hostids_str = hostids
+			elsif hostid.key('id')
+				hostids_str = hostids['id']
+			end
+			self.request("/admin/groups/add", "id=#{group['id']}&hostid=#{hostids_str}")
+		end
+
 		def request(path, body="", headers = {})
 			self.connect unless @http.is_a?(Net::HTTP)
-			@http.post(path, body, @headers.merge(headers))
+			if body == ""
+				@http.get(path, initheader = @headers.merge(headers))
+			else
+				@http.post(path, body, @headers.merge(headers))
+			end
 		end
 	end
 end
